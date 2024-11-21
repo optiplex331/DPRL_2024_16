@@ -32,11 +32,11 @@ def limiting_distribution(states, n_states, state_to_idx):
 
     for _ in range(ITERATION):
         new_pi = np.dot(pi, P)
-        if np.max(np.abs(new_pi - pi)) < 1e-8:
+        if np.max(np.abs(new_pi - pi)) < threshold:
             break
         pi = new_pi
 
-    # Compute long-run average costs
+    # Calculate long-run average costs
     ordering_cost = sum(
         pi[state_to_idx[(s1, s2)]] * ((s1 == 1) or (s2 == 1)) * order_cost
         for s1, s2 in states
@@ -46,10 +46,6 @@ def limiting_distribution(states, n_states, state_to_idx):
         for s1, s2 in states
     )
     total_cost = ordering_cost + holding_cost_total
-
-    # print("Long-Run Average Total Cost:", total_cost)
-    # print("Ordering Cost:", ordering_cost)
-    # print("Holding Cost:", holding_cost_total)
     return total_cost
 
 def poisson_equation(states, n_states, state_to_idx):
@@ -76,14 +72,16 @@ def poisson_equation(states, n_states, state_to_idx):
 
     # Initialize value function and average cost
     V = np.zeros(n_states)
-    phi = 0  # Initial estimate of average cost
-
+    phi = 0
+    
+    # Calculate phi
     delta = threshold
     for _ in range(ITERATION):
         if delta < threshold:
             break
         V_new = np.zeros(n_states)
         for idx in range(n_states):
+            # Poisson equation
             V_new[idx] = r[idx] + np.sum(P[idx, :] * V) - phi
         phi_new = np.mean(V_new)
         delta = np.max(np.abs(V_new - V))
