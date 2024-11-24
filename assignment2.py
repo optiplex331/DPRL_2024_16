@@ -4,7 +4,7 @@ max_inventory = 20
 order_cost = 5
 holding_cost_1 = 1
 holding_cost_2 = 2
-threshold = 1e-20
+threshold = 1e-10
 ITERATION = 100000
 
 def limiting_distribution(states, n_states, state_to_idx):
@@ -17,7 +17,7 @@ def limiting_distribution(states, n_states, state_to_idx):
         for d1 in [0, 1]:
             for d2 in [0, 1]:
                 # Order placed
-                if s1 <= 1 or s2 <= 1:
+                if s1 == 1 or s2 == 1:
                     new_s1 = 5 - d1
                     new_s2 = 5 - d2
                 # No order placed
@@ -59,7 +59,7 @@ def poisson_equation(states, n_states, state_to_idx):
             r[current_idx] += order_cost
         for d1 in [0, 1]:
             for d2 in [0, 1]:
-                if s1 <= 1 or s2 <= 1:
+                if s1 == 1 or s2 == 1:
                     new_s1 = 5 - d1
                     new_s2 = 5 - d2
                 else:
@@ -111,10 +111,9 @@ def simulation():
     return total_cost/ITERATION
 
 
-
 if __name__ == "__main__":
     # State space: all combinations of inventory levels for product 1 and product 2
-    states = [(s1, s2) for s1 in range(0, max_inventory + 1) for s2 in range(0, max_inventory + 1)]
+    states = [(s1, s2) for s1 in range(1, max_inventory + 1) for s2 in range(1, max_inventory + 1)]
     n_states = len(states)
 
     # Map states to indices
