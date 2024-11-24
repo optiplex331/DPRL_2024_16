@@ -67,7 +67,7 @@ def poisson_equation(states, n_states, state_to_idx):
                     new_s2 = s2 - d2
                 next_idx = state_to_idx[(new_s1, new_s2)]
                 P[current_idx, next_idx] += 0.25
-            
+
     # Initialize value function and average cost
     V = np.zeros(n_states)
     phi = 0
@@ -110,6 +110,56 @@ def simulation():
     total_cost = total_order_cost + total_holding_cost
     return total_cost/ITERATION
 
+def bellman_value_iteration():
+    # Define state space and mapping
+    states = [(i1, i2) for i1 in range(1, max_inventory + 1) for i2 in range(1, max_inventory + 1)]
+    state_to_idx = {state: idx for idx, state in enumerate(states)}
+    idx_to_state = {idx: state for state, idx in state_to_idx.items()}
+
+    value_function = np.zeros(len(states))
+    average_cost = 0
+
+    for iteration in range(ITERATION):
+        new_value_function = np.zeros(len(states))
+        policy = [None] * len(states)
+        max_delta = 0
+
+        for idx, (i1, i2) in enumerate(states):
+            actions = [(o1, o2) for o1 in range(max_inventory - i1 + 1) for o2 in range(max_inventory - i2 + 1)]
+            min_cost, best_action = float('inf'), None
+
+            for o1, o2 in actions:
+                immediate_cost = order_cost if o1 + o2 > 0 else 0
+                immediate_cost += i1 * holding_cost_1 + i2 * holding_cost_2
+
+                expected_cost = sum(
+                    0.25 * value_function[state_to_idx[(
+                        min(max(i1 - d1, 0) + o1, max_inventory),
+                        min(max(i2 - d2, 0) + o2, max_inventory)
+                    )]]
+                    for d1 in [0, 1] for d2 in [0, 1]
+                    if min(max(i1 - d1, 0) + o1, max_inventory) >= 1
+                    and min(max(i2 - d2, 0) + o2, max_inventory) >= 1
+                )
+
+                total_cost = immediate_cost + expected_cost - average_cost
+                if total_cost < min_cost:
+                    min_cost, best_action = total_cost, (o1, o2)
+
+            new_value_function[idx] = min_cost
+            policy[idx] = best_action
+            max_delta = max(max_delta, abs(new_value_function[idx] - value_function[idx]))
+
+        average_cost += np.mean(new_value_function - value_function)
+        print(f"Iteration {iteration}, max delta = {max_delta}, average cost = {average_cost:.6f}")
+
+        if max_delta < threshold:
+            break
+
+        value_function = new_value_function
+
+    optimal_policy = {state: policy[idx] for idx, state in enumerate(states)}
+    return average_cost, optimal_policy
 
 if __name__ == "__main__":
     # State space: all combinations of inventory levels for product 1 and product 2
@@ -126,4 +176,5 @@ if __name__ == "__main__":
     print("Simulation: ", simulation_result)
     print("Limiting distribution: ", limiting_distribution_result)
     print("Poisson equation: ", poisson_equation_result)
+    print("Bellman value iteration: ", bellman_value_iteration())
 

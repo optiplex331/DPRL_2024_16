@@ -190,37 +190,6 @@ def heatmap_constraint(constraint_policy, prices):
     plt.show()
 
 
-
-    # # Map policy indices to actual prices and ensure it's 2D
-    # optimal_policy = np.vectorize(lambda a: prices[a])(constraint_policy)
-    # optimal_policy = np.squeeze(optimal_policy)  # Remove any extra dimensions if necessary
-    #
-    # fig, ax = plt.subplots(figsize=(15, 5))
-    #
-    # # Sort prices and define colormap
-    # sorted_prices_indices = np.argsort(prices)
-    # sorted_prices = np.array(prices)[sorted_prices_indices]
-    # sorted_colors = ['#1D3557', '#457B9D', '#A8DADC']  # Dark to light blues
-    #
-    # cmap = ListedColormap(sorted_colors)
-    # boundaries = np.append(sorted_prices - 25, sorted_prices[-1] + 25)
-    # norm = BoundaryNorm(boundaries, cmap.N)
-    #
-    # # Plot the optimal pricing policy with distinct colors for each price level
-    # cax = ax.pcolormesh(optimal_policy.T, cmap=cmap, norm=norm, shading='auto')
-    # ax.set_xlabel('Time Period')
-    # ax.set_ylabel('Inventory')
-    # ax.set_title('Optimal Pricing Policy')
-    #
-    # # Adding color bar with labels for each price level
-    # cbar = fig.colorbar(cax, ax=ax, ticks=sorted_prices)
-    # cbar.set_label('Price')
-    # cbar.ax.set_yticklabels([f'${price}' for price in sorted_prices])
-    #
-    # plt.tight_layout()
-    # plt.show()
-
-
 if __name__ == "__main__":
     T = 500
     initial_inventory = 100
