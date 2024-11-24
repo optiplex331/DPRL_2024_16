@@ -4,7 +4,7 @@ max_inventory = 20
 order_cost = 5
 holding_cost_1 = 1
 holding_cost_2 = 2
-threshold = 1e-8
+threshold = 1e-20
 ITERATION = 100000
 
 def limiting_distribution(states, n_states, state_to_idx):
@@ -14,19 +14,18 @@ def limiting_distribution(states, n_states, state_to_idx):
     # Calculate the transition matrix
     for s1, s2 in states:
         current_idx = state_to_idx[(s1, s2)]
-        # Place order
-        if s1 <= 1 or s2 <= 1:
-            new_s1, new_s2 = 5, 5
-            next_idx = state_to_idx[(new_s1, new_s2)]
-            P[current_idx, next_idx] = 1 
-        # No order placed
-        else:
-            for d1 in [0, 1]:
-                for d2 in [0, 1]:
+        for d1 in [0, 1]:
+            for d2 in [0, 1]:
+                # Order placed
+                if s1 <= 1 or s2 <= 1:
+                    new_s1 = 5 - d1
+                    new_s2 = 5 - d2
+                # No order placed
+                else:
                     new_s1 = s1 - d1
                     new_s2 = s2 - d2
-                    next_idx = state_to_idx[(new_s1, new_s2)]
-                    P[current_idx, next_idx] += 0.25 # each combination P = 0.25
+                next_idx = state_to_idx[(new_s1, new_s2)]
+                P[current_idx, next_idx] += 0.25 # each combination P = 0.25
 
     pi = np.ones(n_states) / n_states
 
@@ -57,19 +56,18 @@ def poisson_equation(states, n_states, state_to_idx):
         current_idx = state_to_idx[(s1, s2)]
         r[current_idx] = s1 * holding_cost_1 + s2 * holding_cost_2
         if s1 <= 1 or s2 <= 1:
-            new_s1, new_s2 = 5, 5  # Both inventories reset to 5
             r[current_idx] += order_cost
-            next_idx = state_to_idx[(new_s1, new_s2)]
-            P[current_idx, next_idx] = 1  # Deterministic transition after ordering
-        else:
-            for d1 in [0, 1]:
-                for d2 in [0, 1]:
+        for d1 in [0, 1]:
+            for d2 in [0, 1]:
+                if s1 <= 1 or s2 <= 1:
+                    new_s1 = 5 - d1
+                    new_s2 = 5 - d2
+                else:
                     new_s1 = s1 - d1
                     new_s2 = s2 - d2
-                    next_idx = state_to_idx[(new_s1, new_s2)]
-                    P[current_idx, next_idx] += 0.25
+                next_idx = state_to_idx[(new_s1, new_s2)]
+                P[current_idx, next_idx] += 0.25
             
-
     # Initialize value function and average cost
     V = np.zeros(n_states)
     phi = 0
@@ -97,20 +95,16 @@ def simulation():
     total_holding_cost = 0
 
     for _ in range(ITERATION):
-        order = False
         # Place order
         if i1 == 1 or i2 == 1:
-            order = True
+            i1, i2 = 5, 5
+            total_order_cost += order_cost
         # Decide demands
         d1 = np.random.choice([0, 1])
         d2 = np.random.choice([0, 1])
         # Sale
         i1 -= d1
         i2 -= d2
-        # Order arrival
-        if order:
-            i1, i2 = 5, 5
-            total_order_cost += order_cost
         # Calculate holding cost
         total_holding_cost += i1 * holding_cost_1 + i2 * holding_cost_2
     total_cost = total_order_cost + total_holding_cost
